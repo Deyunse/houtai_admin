@@ -7,6 +7,7 @@ import 'element-ui/lib/theme-chalk/index.css'
 import '@//styles/reset.less'
 import './permission'
 import TableCrumbs from '@/components/TableCrumbs'
+
 Vue.component('TableCrumbs', TableCrumbs)
 Vue.config.productionTip = false
 Vue.use(ElementUI)

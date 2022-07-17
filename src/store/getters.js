@@ -3,5 +3,7 @@ export default {
   UsersList: state => state.user.UsersList,
   roleForm: state => state.user.roleForm,
   extentList: state => state.user.extentList,
-  extentTeer: state => state.rights.extentTeer
+  extentTeer: state => state.rights.extentTeer,
+  // goods模块
+  goodsList: state => state.goods.goodsList
 }

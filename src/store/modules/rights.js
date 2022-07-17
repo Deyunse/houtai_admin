@@ -14,6 +14,7 @@ const actions = {
       item.index = index + 1
     })
     context.commit('serExtent', res.data.data)
+    console.log(res)
   }
 }
 export default {

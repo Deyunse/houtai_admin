@@ -4,6 +4,7 @@ import user from './modules/user' // user 模块
 import getters from './getters' // getters
 import VuexPersistence from 'vuex-persist'
 import rights from './modules/rights'
+import goods from './modules/goods'
 const vuexLocal = new VuexPersistence({
   storage: window.localStorage
 })
@@ -16,7 +17,8 @@ export default new Vuex.Store({
 
   modules: {
     user,
-    rights
+    rights,
+    goods
   },
   plugins: [vuexLocal.plugin]
 })

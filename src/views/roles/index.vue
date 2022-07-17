@@ -5,52 +5,51 @@
       :list="extentList[2].children[0].authName"
     ></TableCrumbs>
     <div class="roles">
-      <el-button
-        type="primary"
-        class="add"
-        @click="dialogVisible = true"
-        style="margin: 20px 0"
+      <el-button type="primary" class="add" style="margin: 20px 0"
         >添加角色</el-button
       >
       <el-table border :data="roleForm" stripe>
         <el-table-column label="#" width="47px" type="expand">
-          <template slot-scope="props">
-            <el-form>
-              <el-form-item>
-                <div class="content">
-                  <el-row
-                    v-for="(item, index) in props.row.children"
-                    :key="index"
-                  >
-                    <!-- 第一行 -->
-                    <el-col :span="5">
-                      <div class="box1">
-                        <el-tag>23123{{ item.authName }} </el-tag>
-                        <i class="el-icon-caret-right"></i>
-                      </div>
-                    </el-col>
-                    <el-row>
-                      <el-col
-                        :span="5"
-                        v-for="(item1, ind) in item.children"
-                        :key="ind"
-                      >
-                        <el-tag type="success">123{{ item1.authName }} </el-tag>
-                        <i class="el-icon-caret-right"></i>
-                      </el-col>
-                      <el-col :span="19">123 </el-col>
-                    </el-row>
-                  </el-row>
-                </div>
-              </el-form-item>
-            </el-form>
+          <template v-slot="scope">
+            <el-row
+              v-for="(item, index) in scope.row.children"
+              :key="item.id"
+              :class="['roles_data', 'bom', index === 0 ? 'top' : '']"
+            >
+              <el-col :span="5">
+                <el-tag>{{ item.authName }}</el-tag>
+                <i class="el-icon-caret-right"></i>
+              </el-col>
+
+              <el-col :span="19">
+                <el-row
+                  v-for="(val, ind) in item.children"
+                  :key="val.id"
+                  :class="['roles_data', ind === 0 ? '' : 'top']"
+                >
+                  <el-col :span="6">
+                    <el-tag type="success">{{ val.authName }}</el-tag>
+                    <i class="el-icon-caret-right"></i>
+                  </el-col>
+                  <el-col :span="18">
+                    <el-tag
+                      v-for="item1 in val.children"
+                      :key="item1.id"
+                      closable
+                      @close="open(scope.row, item1.id)"
+                      >{{ item1.authName }}
+                    </el-tag>
+                  </el-col>
+                </el-row>
+              </el-col>
+            </el-row>
           </template>
         </el-table-column>
         <el-table-column prop="index" label="#" width="47px"> </el-table-column>
         <el-table-column prop="roleName" label="角色名称"></el-table-column>
         <el-table-column prop="roleDesc" label="角色描述"></el-table-column>
         <el-table-column label="操作">
-          <template>
+          <template v-slot="scope">
             <el-row>
               <el-button size="mini" type="primary" icon="el-icon-edit"
                 >编辑</el-button
@@ -64,6 +63,7 @@
                 type="warning"
                 icon="el-icon-setting"
                 class="btn"
+                @click="powerBtn(scope.row)"
                 >分配权限</el-button
               >
             </el-row>
@@ -71,19 +71,96 @@
         </el-table-column>
       </el-table>
     </div>
+    <el-dialog title="分配权限" :visible.sync="dialogVisible" width="50%">
+      <el-tree
+        :data="extentList"
+        show-checkbox
+        node-key="id"
+        :props="{ label: 'authName', children: 'children' }"
+        default-expand-all
+        :default-checked-keys="cheacked"
+      ></el-tree>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="dialogVisible = false"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import { delRole } from '@/api/roles'
 export default {
   created () {
     this.$store.dispatch('user/getRole')
   },
   data () {
-    return {}
+    return {
+      dialogVisible: false,
+      cheacked: []
+    }
   },
-  methods: {},
+  methods: {
+    powerBtn (rowObj) {
+      // function fn (list) {
+      // console.log(list)
+      this.$nextTick(this.filterFn(rowObj, this.cheacked))
+
+      //   if (!list.children) {
+      //     this.cheacked.push(list.id)
+      //   } else {
+      //     list.children.forEach(item => {
+      //       fn(item.children)
+      //     })
+      //   }
+      // }
+      // fn(obj)
+      this.dialogVisible = true
+    },
+
+    async open (rightId, roleId) {
+      // console.log(rightId)
+      this.cheacked = []
+      try {
+        await this.$confirm('此操作将永久删除该权限, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        const res = await delRole(rightId.id, roleId)
+        // console.log(res)
+        console.log(roleId)
+        if (res.request.status === 200) {
+          console.log(res)
+          rightId.children = res.data.data
+        } else {
+          this.$message.error('取消权限失败')
+        }
+        this.$message({
+          type: 'success',
+          message: '删除成功!'
+        })
+        // this.powerBtn()
+      } catch (err) {
+        this.$notify({
+          message: '取消删除成功！'
+        })
+      }
+
+      // this.cheacked = []
+    },
+    filterFn (rowObj, arr) {
+      // console.log(rowObj)
+      if (!rowObj.children) {
+        return arr.push(rowObj.id)
+      }
+      rowObj.children.forEach(item => this.filterFn(item, arr))
+    }
+
+  },
   computed: {
     ...mapGetters(['roleForm', 'extentList'])
   },
@@ -104,24 +181,22 @@ export default {
     }
   }
 }
-.content {
-  margin: 20px 50px;
-  padding: 10px;
+.el-tag {
+  margin: 15px;
 }
-.box1 {
-  width: 100%;
-  height: 100%;
-  padding-left: 20px;
+.el-icon-close {
+  border-radius: 50%;
+  background-color: #fff;
 }
-.box2 {
+.roles_data {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
 }
-.el-row {
-  .el-col {
-    display: flex;
-    justify-self: center;
-    align-items: center;
-  }
+.top {
+  border-top: 1px solid #eee;
+}
+.bom {
+  border-bottom: 1px solid #eee;
 }
 </style>

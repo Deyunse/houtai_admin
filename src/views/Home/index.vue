@@ -29,7 +29,7 @@
           text-color="#fff"
           unique-opened
           router
-          :default-active="$router.path"
+          :default-active="$route.path"
           :collapse="isCollapse"
         >
           <el-submenu
@@ -78,6 +78,8 @@ export default {
       try {
         const res = await getMeanus()
         console.log(res)
+        // console.log(res.data.meta.status)
+
         this.meanusList = res.data.data
       } catch (err) {
         console.log(err)
@@ -154,5 +156,9 @@ export default {
   font-size: 20px;
   text-align: center;
   line-height: 50px;
+}
+.btn {
+  background-color: skyblue;
+  border-radius: 0;
 }
 </style>

@@ -41,7 +41,7 @@ const actions = {
   },
   async getExtent (context, type) {
     const res = await getExtent(type) // 所有权限列表
-    console.log(res)
+    // console.log(res)
     context.commit('setExtentList', res.data.data)
   },
   async getRole (context) {
