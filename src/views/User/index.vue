@@ -80,7 +80,12 @@
     </el-card>
     <!-- 添加用户 -->
     <el-dialog title="添加用户" :visible.sync="dialogVisible" width="50%">
-      <el-form label-width="80px" :model="addUser" :rules="rules">
+      <el-form
+        label-width="80px"
+        :model="addUser"
+        :rules="rules"
+        v-if="dialogVisible"
+      >
         <el-form-item label="用户名" prop="username">
           <el-input v-model="addUser.username"> </el-input>
         </el-form-item>
@@ -243,7 +248,7 @@ export default {
     },
     // 添加用户
     async add () {
-      this.dialogVisible = false
+      // 二次校验未做
       try {
         await addUsers(this.addUser)
         // 添加成功后 重新或列表
@@ -251,6 +256,7 @@ export default {
       } catch (err) {
         console.log(err)
       }
+      this.dialogVisible = false
     },
     modify (id) {
       this.updataUser.id = id

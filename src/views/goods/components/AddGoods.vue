@@ -1,13 +1,18 @@
 <template>
   <div>
-    <!-- <TableCrumbs
+    <TableCrumbs
       :manage="extentList[0].authName"
       :list="extentList[0].children[0].children[0].authName"
-    ></TableCrumbs> -->
+    ></TableCrumbs>
     <div class="add-container">
       <p><i class="el-icon-info"> </i>&nbsp;&nbsp;添加商品信息</p>
 
-      <el-steps :space="200" :active="1" finish-status="success" align-center>
+      <el-steps
+        :space="200"
+        :active="activeIndex - 0"
+        finish-status="success"
+        align-center
+      >
         <el-step title="基本信息"></el-step>
         <el-step title="商品参数"></el-step>
         <el-step title="商品属性"></el-step>
@@ -17,15 +22,91 @@
       </el-steps>
       <el-tabs
         :tab-position="tabPosition"
-        style="height: 200px"
-        @tab-click="handleClick"
+        style="min-height: 200px"
+        v-model="activeIndex"
+        @tab-click="handleChange"
       >
-        <el-tab-pane label="基本信息">用户管理</el-tab-pane>
-        <el-tab-pane label="商品参数">配置管理</el-tab-pane>
-        <el-tab-pane label="商品属性">角色管理</el-tab-pane>
-        <el-tab-pane label="商品图片">定时任务补偿</el-tab-pane>
-        <el-tab-pane label="商品内容">定时任务补偿</el-tab-pane>
-        <el-tab-pane label="完成">定时任务补偿</el-tab-pane>
+        <!-- 基本信息 -->
+        <el-tab-pane name="0" label="基本信息">
+          <el-form :data="goodsObj" :rules="rules">
+            <el-form-item label="商品名称" prop="goods_name">
+              <el-input v-model="goodsObj.goods_name"></el-input>
+            </el-form-item>
+            <el-form-item label="商品价格">
+              <el-input
+                type="number"
+                v-model.number="goodsObj.goods_price"
+                controls-position="right"
+                :controls="false"
+              ></el-input>
+            </el-form-item>
+            <el-form-item label="商品重量">
+              <el-input
+                type="number"
+                v-model.number="goodsObj.goods_weight"
+                controls-position="right"
+                :controls="false"
+              ></el-input>
+            </el-form-item>
+            <el-form-item label="商品数量">
+              <el-input
+                type="number"
+                v-model.number="goodsObj.goods_number"
+                controls-position="right"
+                :controls="false"
+              ></el-input>
+            </el-form-item>
+            <el-form-item>
+              <template label>
+                <div>商品分类</div>
+              </template>
+              <el-cascader
+                v-model="goodsObj.goods_cat"
+                :options="options"
+                :props="{
+                  label: 'cat_name',
+                  children: 'children',
+                  expandTrigger: 'hover',
+                  value: 'cat_id',
+                }"
+                ref="mycascader"
+                emitPath
+              ></el-cascader>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+        <!-- 商品参数 -->
+        <el-tab-pane name="1" label="商品参数">
+          <el-form>
+            <el-form-item v-for="(item, index) in parameters" :key="index">
+              <template label
+                ><div>{{ item.attr_vals }}</div></template
+              >
+              <el-checkbox-group v-model="goodsObj.goods_introduce">
+                <el-checkbox border :label="item.attr_id"></el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+        <!-- 商品属性 -->
+        <el-tab-pane name="2" label="商品属性">
+          <el-form>
+            <el-form-item
+              :label="item.attr_name"
+              v-for="(item, index) in property"
+              :key="index"
+            >
+              <el-input v-model="item.attr_vals"></el-input>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+        <!-- 商品图片 -->
+        <el-tab-pane name="3" label="商品图片">
+          <el-upload accept="#">
+            <el-button type="primary" size="small">点击上传</el-button>
+          </el-upload>
+        </el-tab-pane>
+        <el-tab-pane name="4" label="商品内容">定时任务补偿</el-tab-pane>
       </el-tabs>
     </div>
   </div>
@@ -33,14 +114,79 @@
 
 <script>
 import { mapGetters } from 'vuex'
+// import BasicMsg from './BasicMsg' // 商品信息
+import { getCateGories, getSort, getProperty } from '@/api/goods'
 export default {
-  created () { },
+  created () {
+    this.getCateGories()
+  },
   data () {
     return {
-      tabPosition: 'left'
+      tabPosition: 'left',
+      activeIndex: 0,
+      goodsObj: {
+        goods_name: '',
+        goods_cat: '',
+        goods_price: 0,
+        goods_number: 0,
+        goods_weight: 0,
+        goods_introduce: [],
+        pics: '',
+        attrs: ''
+      },
+      rules: {
+        goods_name: [{
+          required: true, message: '亲输入商品名称', trigger: 'blur'
+        }]
+      },
+      options: [],
+      value: [],
+      parameters: [],
+      property: []
+
     }
   },
   methods: {
+    handleClick () {
+    },
+    handleChange (tab, event) {
+      // console.log(tab)
+      if (this.activeIndex === '0') {
+        this.getCateGories()
+      } else if (this.activeIndex === '1') {
+        this.getSort()
+      } else if (this.activeIndex === '2') {
+        this.getProperty()
+      }
+      // console.log(123)
+    },
+    async getCateGories () {
+      try {
+        const res = await getCateGories()
+        console.log(res.data.data)
+        this.options = res.data.data
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    async getSort () {
+      try {
+        const res = await getSort(this.goodsObj.goods_cat[this.goodsObj.goods_cat.length - 1])
+        res.data.data.forEach(item => this.goodsObj.goods_introduce.push(item.attr_id))
+        this.parameters = res.data.data
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    async getProperty () {
+      try {
+        const res = await getProperty(this.goodsObj.goods_introduce.length)
+        console.log(res)
+        this.property = res.data.data
+      } catch (error) {
+        console.log(error)
+      }
+    }
 
   },
   computed: {
@@ -70,6 +216,9 @@ export default {
     i {
       font-size: 16px;
     }
+  }
+  .el-steps {
+    margin-bottom: 20px;
   }
 }
 </style>

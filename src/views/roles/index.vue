@@ -71,7 +71,12 @@
         </el-table-column>
       </el-table>
     </div>
-    <el-dialog title="分配权限" :visible.sync="dialogVisible" width="50%">
+    <el-dialog
+      title="分配权限"
+      :visible.sync="dialogVisible"
+      width="50%"
+      @close="clearFn"
+    >
       <el-tree
         :data="extentList"
         show-checkbox
@@ -79,12 +84,11 @@
         :props="{ label: 'authName', children: 'children' }"
         default-expand-all
         :default-checked-keys="cheacked"
+        ref="tree"
       ></el-tree>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false"
-          >确 定</el-button
-        >
+        <el-button type="primary" @click="addRoles">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -92,7 +96,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { delRole } from '@/api/roles'
+import { delRole, roleAuthorization } from '@/api/roles'
 export default {
   created () {
     this.$store.dispatch('user/getRole')
@@ -100,30 +104,25 @@ export default {
   data () {
     return {
       dialogVisible: false,
-      cheacked: []
+      cheacked: [],
+      roleId: ''
     }
   },
   methods: {
     powerBtn (rowObj) {
+      this.roleId = rowObj.id
+      this.$store.dispatch('user/getExtent', 'tree')
+      // console.log(this.roleFormz)
       // function fn (list) {
       // console.log(list)
-      this.$nextTick(this.filterFn(rowObj, this.cheacked))
-
-      //   if (!list.children) {
-      //     this.cheacked.push(list.id)
-      //   } else {
-      //     list.children.forEach(item => {
-      //       fn(item.children)
-      //     })
-      //   }
-      // }
-      // fn(obj)
+      this.filterFn(rowObj)
+      // this.$store.dispatch('user/getRole')
       this.dialogVisible = true
     },
 
     async open (rightId, roleId) {
       // console.log(rightId)
-      this.cheacked = []
+      // this.cheacked = [
       try {
         await this.$confirm('此操作将永久删除该权限, 是否继续?', '提示', {
           confirmButtonText: '确定',
@@ -132,32 +131,47 @@ export default {
         })
         const res = await delRole(rightId.id, roleId)
         // console.log(res)
-        console.log(roleId)
+        // console.log(roleId)
         if (res.request.status === 200) {
-          console.log(res)
+          // console.log(res)
           rightId.children = res.data.data
         } else {
           this.$message.error('取消权限失败')
         }
+        // console.log(123)
+        // console.log(this.cheacked)
         this.$message({
           type: 'success',
           message: '删除成功!'
         })
-        // this.powerBtn()
       } catch (err) {
         this.$notify({
           message: '取消删除成功！'
         })
       }
-
-      // this.cheacked = []
     },
-    filterFn (rowObj, arr) {
+    filterFn (rowObj) {
       // console.log(rowObj)
       if (!rowObj.children) {
-        return arr.push(rowObj.id)
+        return this.cheacked.push(rowObj.id)
       }
-      rowObj.children.forEach(item => this.filterFn(item, arr))
+      rowObj.children.forEach(item => this.filterFn(item))
+      // console.log(this.cheacked)
+    },
+    async addRoles () {
+      this.dialogVisible = false
+
+      let arr = [...this.$refs.tree.getCheckedKeys(), ...this.$refs.tree.getHalfCheckedKeys()]
+      // console.log(arr)
+      try {
+        await roleAuthorization({ rids: arr.join(',') }, this.roleId)
+        this.$store.dispatch('user/getRole')
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    clearFn () {
+      this.cheacked = []
     }
 
   },

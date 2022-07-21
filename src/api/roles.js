@@ -5,3 +5,10 @@ export const delRole = (roleId, rightId) => {
     url: `roles/${roleId}/rights/${rightId}`
   })
 }
+export const roleAuthorization = (data, roleId) => {
+  return request({
+    method: 'POST',
+    url: `roles/${roleId}/rights`,
+    data: data
+  })
+}
