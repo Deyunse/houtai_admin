@@ -28,7 +28,7 @@
       >
         <!-- 基本信息 -->
         <el-tab-pane name="0" label="基本信息">
-          <el-form :data="goodsObj" :rules="rules">
+          <el-form :model="goodsObj" :rules="rules">
             <el-form-item label="商品名称" prop="goods_name">
               <el-input v-model="goodsObj.goods_name"></el-input>
             </el-form-item>
@@ -82,7 +82,7 @@
               <template label
                 ><div>{{ item.attr_vals }}</div></template
               >
-              <el-checkbox-group v-model="goodsObj.goods_introduce">
+              <el-checkbox-group v-model="ischecked">
                 <el-checkbox border :label="item.attr_id"></el-checkbox>
               </el-checkbox-group>
             </el-form-item>
@@ -102,20 +102,31 @@
         </el-tab-pane>
         <!-- 商品图片 -->
         <el-tab-pane name="3" label="商品图片">
-          <el-upload accept="#">
+          <el-upload
+            action="http://liufusong.top:8899/api/private/v1/upload"
+            :on-preview="handlePreview"
+            :on-remove="handleRemove"
+            list-type="picture"
+          >
             <el-button type="primary" size="small">点击上传</el-button>
           </el-upload>
         </el-tab-pane>
-        <el-tab-pane name="4" label="商品内容">定时任务补偿</el-tab-pane>
+        <el-tab-pane name="4" label="商品内容">
+          <template>
+            <RichText @addgoods="addgoods"></RichText>
+          </template>
+        </el-tab-pane>
       </el-tabs>
     </div>
   </div>
 </template>
 
 <script>
+
 import { mapGetters } from 'vuex'
 // import BasicMsg from './BasicMsg' // 商品信息
-import { getCateGories, getSort, getProperty } from '@/api/goods'
+import { getCateGories, getSort, getProperty, addGoods } from '@/api/goods'
+import RichText from './RichText'
 export default {
   created () {
     this.getCateGories()
@@ -130,19 +141,18 @@ export default {
         goods_price: 0,
         goods_number: 0,
         goods_weight: 0,
-        goods_introduce: [],
-        pics: '',
-        attrs: ''
+        goods_introduce: '',
+        pics: [],
+        attrs: []
       },
       rules: {
-        goods_name: [{
-          required: true, message: '亲输入商品名称', trigger: 'blur'
-        }]
+        goods_name: [{ required: true, message: '亲输入商品名称', trigger: 'blur' }]
       },
       options: [],
       value: [],
       parameters: [],
-      property: []
+      property: [],
+      ischecked: []
 
     }
   },
@@ -172,7 +182,8 @@ export default {
     async getSort () {
       try {
         const res = await getSort(this.goodsObj.goods_cat[this.goodsObj.goods_cat.length - 1])
-        res.data.data.forEach(item => this.goodsObj.goods_introduce.push(item.attr_id))
+        res.data.data.forEach(item => this.ischecked.push(item.attr_id))
+        res.data.data.forEach(item => this.goodsObj.attrs.push({ attr_id: item.attr_id, attr_value: item.attr_vals }))
         this.parameters = res.data.data
       } catch (error) {
         console.log(error)
@@ -181,10 +192,42 @@ export default {
     async getProperty () {
       try {
         const res = await getProperty(this.goodsObj.goods_introduce.length)
-        console.log(res)
+        // console.log(res)
         this.property = res.data.data
       } catch (error) {
         console.log(error)
+      }
+    },
+    handleRemove (file, fileList) {
+      this.handlePreview()
+      console.log(file, fileList)
+    },
+    handlePreview (file) {
+      console.log(file)
+      let files = []
+      files.push(file)
+      files.forEach(item => {
+        this.goodsObj.pics.push(item.url)
+      })
+    },
+    async addgoods (value) {
+      // 处理 数据属性
+
+      this.goodsObj.attrs.forEach(val => {
+        if (this.ischecked.includes(val.attr_id)) {
+          return val
+        } else {
+          delete this.goodsObj.val
+        }
+      })
+      this.goodsObj.goods_cat = this.goodsObj.goods_cat.join(',')
+      this.goodsObj.goods_introduce = value
+      // console.log(this.goodsObj)
+      try {
+        await addGoods(this.goodsObj)
+        this.$router.push({ name: 'goods' })
+      } catch (error) {
+        this.$message.error(error)
       }
     }
 
@@ -194,7 +237,7 @@ export default {
   },
   watch: {},
   filters: {},
-  components: {}
+  components: { RichText }
 }
 </script>
 

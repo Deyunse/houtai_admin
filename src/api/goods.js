@@ -29,3 +29,10 @@ export const getProperty = (id) => {
     url: `categories/${id}/attributes?sel=only`
   })
 }
+export const addGoods = data => {
+  return request({
+    method: 'POST',
+    url: 'goods',
+    data
+  })
+}

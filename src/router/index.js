@@ -16,9 +16,17 @@ const routes = [
       { path: 'rights', component: () => import('@/views/Rights') },
       {
         path: 'goods',
+        name: 'goods',
         component: () => import('@/views/goods')
       },
-      { path: 'add', name: 'add', component: () => import('@/views/goods/components/AddGoods.vue') }
+      { path: 'add', name: 'add', component: () => import('@/views/goods/components/AddGoods.vue') },
+      {
+        path: 'params',
+        component: () => import('@/views/Params')
+      }, {
+        path: 'categories',
+        component: () => import('@/views/categories')
+      }
     ]
   }
 
