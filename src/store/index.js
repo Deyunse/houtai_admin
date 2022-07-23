@@ -5,6 +5,7 @@ import getters from './getters' // getters
 import VuexPersistence from 'vuex-persist'
 import rights from './modules/rights'
 import goods from './modules/goods'
+import orders from './modules/orders'
 const vuexLocal = new VuexPersistence({
   storage: window.localStorage
 })
@@ -18,7 +19,8 @@ export default new Vuex.Store({
   modules: {
     user,
     rights,
-    goods
+    goods,
+    orders
   },
   plugins: [vuexLocal.plugin]
 })

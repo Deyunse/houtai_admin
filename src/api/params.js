@@ -36,3 +36,32 @@ export const editPut = (id, data) => {
     data
   })
 }
+/**
+ *  添加 动态属性 或者静态属性
+ * @param {*} data
+ * @returns
+ */
+export const addcategories = (data) => {
+  return request({
+    method: 'POST',
+    url: `categories/${data.cat_id}/attributes`,
+    data
+  })
+}
+export const delAtegor = (id, attrid) => {
+  return request({
+    method: 'DELETE',
+    url: `categories/${id}/attributes/${attrid}`
+  })
+}
+/**
+ *  获取商品分类
+ * @param {*} params
+ * @returns
+ */
+export const getCategories = (params) => {
+  return request({
+    url: 'categories',
+    params
+  })
+}

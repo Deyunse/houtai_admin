@@ -34,14 +34,14 @@
           <DynamicNature
             v-if="activeName === 'first'"
             :list="namicList"
-            :id="isID[isEdit.length - 1]"
+            @editPut="deitPut"
           ></DynamicNature>
         </el-tab-pane>
         <el-tab-pane label="静态属性" name="second">
           <DynamicNature
             v-if="activeName === 'second'"
             :list="namicList"
-            :id="isID[isEdit.length - 1]"
+            @editPut="deitPut"
           ></DynamicNature>
         </el-tab-pane>
       </el-tabs>
@@ -73,7 +73,9 @@
 <script>
 import { mapGetters } from 'vuex'
 import DynamicNature from './components/DynamicNature.vue' // 动态态属性
-import { getCateGories, getNatureList, editAttributes } from '@/api/params'
+import { getCateGories, getNatureList, editAttributes, editPut } from '@/api/params'
+// import { editPut } from '@/api/params'
+
 export default {
   created () {
     this.getCateGories() // 所以分类数据列表
@@ -159,6 +161,26 @@ export default {
         this.editAttributes(this.isID[this.isID.length - 1], { attr_name: this.form.value, attr_sel: 'many' })
       } else {
         this.editAttributes(this.isID[this.isID.length - 1], { attr_name: this.form.value, attr_sel: 'only' })
+      }
+      this.handleClick()
+    },
+    async deitPut (obj) {
+      if (this.isEdit) {
+        obj.attr_sel = 'many'
+        try {
+          const res = await editPut(this.isID[this.isID.length - 1], obj)
+          console.log(res)
+        } catch (error) {
+          console.log(error)
+        }
+      } else {
+        obj.attr_sel = 'only'
+        try {
+          const res = await editPut(this.isID[this.isID.length - 1], obj)
+          console.log(res)
+        } catch (error) {
+          console.log(error)
+        }
       }
       this.handleClick()
     }
